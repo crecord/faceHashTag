@@ -135,12 +135,6 @@
 				var overlay = document.getElementById('overlay');
 				var overlayCC = overlay.getContext('2d');
 				var bx = document.getElementById('box');
-				var mouthIsClosed = false; 
-				var indexOfWord = 0; 
-				var words = ["chew", "through", "this."]; 
-				var mouthWord; 
-
-
 				console.log(bx); 
 				
 				var ctrack = new clm.tracker({useWebGL : true});
@@ -162,7 +156,6 @@
 					//startbutton.value = "start";
 					//startbutton.disabled = null;
 					startVideo();
-
 				}
 				
 				var insertAltVideo = function(video) {
@@ -221,14 +214,7 @@
 					// start tracking
 					ctrack.start(vid);
 					// start loop to draw face
-					console.log(ctrack);
 					drawLoop();
-
-					mouthWord = document.createElement('a');
-					mouthWord.innerHTML = words[indexOfWord];
-					console.log(words[indexOfWord]);
-					mouthWord.style.position = 'absolute'; 
-					document.body.appendChild(mouthWord);
 
 					
 				}
@@ -237,7 +223,7 @@
 
 					
 						
-					
+					console.log("hey");
 
 					requestAnimFrame(drawLoop);
 					overlayCC.clearRect(0, 0, 1200, 900);
@@ -250,57 +236,6 @@
 						if (ele){
 						ele.parentNode.removeChild(ele);
 						}
-
-						var topMouthX = positions[60][0].toFixed(2)
-						var topMouthY = positions[60][1].toFixed(2)
-						var bottomMouthX = positions[57][0].toFixed(2)
-						var bottomMouthY = positions[57][1].toFixed(2)
-
-						var d = Math.abs( Math.sqrt( (bottomMouthX-=topMouthX)*bottomMouthX + (bottomMouthY-=topMouthY)*bottomMouthY ));
-						//console.log(d);
-
-
-						var leftX = positions[14][0].toFixed(2)
-						var leftY = positions[14][1].toFixed(2)
-						var rightX = positions[0][0].toFixed(2)
-						var rightY = positions[0][1].toFixed(2)
-
-						var scaleFactor = Math.abs( Math.sqrt( (rightX-=leftX)*rightX + (rightY-=leftY)*rightY ));
-						
-						var scaledDist = d/scaleFactor; 
-						console.log(scaledDist);
-
-						if ( (scaledDist < 0.05) & !mouthIsClosed) {
-							mouthIsClosed = true; 
-								
-								if( indexOfWord < words.length -1){
-									indexOfWord ++; 
-								}
-								else {
-									indexOfWord = 0; 
-								}
-							mouthWord.innerHTML = words[indexOfWord];
-						}
-
-						if ( (scaledDist > 0.05) & mouthIsClosed){
-							mouthIsClosed = false; 
-						}
-
-
-						
-						//mouthWord.style.top = (topMouthY + (topMouthY - bottomMouthY)/2); 
-						
-						//mouthWord.style.left = 1200 - (bottomMouthX + (bottomMouthX - topMouthX)/2); 
-
-
-						mouthWord.style.top = (topMouthY + (topMouthY - bottomMouthY)/2); 
-						mouthWord.style.left = 1200 - (bottomMouthX + (bottomMouthX - topMouthX)/2);
-						
-						mouthWord.style.width = '10px';
-                        mouthWord.style.height = '10px'; 
-
-						mouthWord.style.color = '#0000ff';
-						
 
 						for(var i= 0; i < positions.length; i++ ){
 
@@ -319,7 +254,7 @@
                             document.body.appendChild(myLayer);
 						}
 						
-						//console.log(positions.length);
+						console.log(positions.length);
 						bx.style.left = 1200 - positions[70][0].toFixed(2)+'px';
 						bx.style.top = positions[70][1].toFixed(2)+'px';
 
