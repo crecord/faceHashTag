@@ -108,9 +108,9 @@
         }
 
         var chew = false;
+        var converged = false;
 
-        // update stats on every iteration
-        document.addEventListener('clmtrackrIteration', function(event) {
+        function draw_words(event) {
           stats.update();
           var positions = ctracker.getCurrentPosition();
 
@@ -146,8 +146,19 @@
           text.translation.y = cy + pos[2][1];
           text.size = dy;
           two.update();
-        }, false);
-      });
+        }
+
+        function init_drawing(event) {
+          console.log('converged');
+          converged = true;
+
+          // update stats on every iteration
+          document.addEventListener('clmtrackrIteration', draw_words, false);
+          document.removeEventListener('clmtrackrConverged', init_drawing, false);
+        }
+
+        document.addEventListener('clmtrackrConverged', init_drawing, false);
+      }, false);
     </script>
     <script type="text/javascript" src="faceTracker/clmtrackr.js" defer></script>
     <script type="text/javascript" src="faceTracker/models/model_spca_10_svm.js" defer></script>
