@@ -1,0 +1,28 @@
+video#face {
+}
+
+div#container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+div#draw {
+  position: absolute;
+}
+
+div#viewport {
+  position: relative;
+}
+
+div#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#overlayc {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}

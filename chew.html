@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Chew</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <script src="faceTracker/ext_js/utils.js"></script>
+    <script src="faceTracker/ext_js/Stats.js"></script>
+    <div id="container">
+      <div id="draw">
+        <div id="overlay"></div>
+        <video id="face" width="400" height="300" preload="auto" loop></video>
+        <br/>
+        <canvas id="overlayc" width="400" height="300"></canvas>
+      </div>
+      <!-- <div id="nogum" class="nogum">
+        <p>
+          There was some problem trying to capture your webcamera, please check that your browser supports WebRTC. Using a fallback video instead. To try it out:
+          <ol>
+            <li>click start</li>
+            <li>see the model fitted to the face</li>
+          </ol>
+        </p>
+      </div> -->
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function(event) {
+        navigator.getUserMedia  = navigator.getUserMedia ||
+                          navigator.webkitGetUserMedia ||
+                          navigator.mozGetUserMedia ||
+                          navigator.msGetUserMedia;
+
+        var video = document.getElementById('face');
+        //resize();
+        var overlay = document.getElementById('overlayc');
+        var overlayCC = overlay.getContext('2d');
+
+        function resize() {
+          video.height = window.innerHeight;
+          video.width = window.innerWidth;
+        }
+
+        //window.onresize = resize;
+        var words = ['Merry', 'Christmas', 'and', 'a', 'Happy', 'New', 'Year!'];
+
+        // two.js
+        var elem = document.getElementById('overlay');
+        var params = { 'type': Two.Types.webgl };
+        two = new Two(params).appendTo(elem);
+
+        // text style
+        var styles = {
+          family: 'proxima-nova, sans-serif',
+          size: 20,
+          fill: 'red'
+        };
+
+        text = two.makeText(words.shift(), 100, 100, styles);
+        text.visible = false;
+        two.update();
+
+        if (navigator.getUserMedia) {
+          navigator.getUserMedia({video: true}, function(stream) {
+            if (video.mozCaptureStream) {
+							video.mozSrcObject = stream;
+						} else {
+							video.src = (window.URL && window.URL.createObjectURL(stream)) || stream;
+						}
+
+            video.play();
+          }, function() {
+            console.log('Webcam rejected');
+          });
+        } else {
+          video.src = 'somevideo.webm'; // fallback.
+        }
+
+        // initial face model
+        ctracker = new clm.tracker({useWebGL : true});
+        ctracker.init(pModel);
+
+        stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.top = '0px';
+        document.getElementById('container').appendChild( stats.domElement );
+
+        ctracker.start(video);
+
+        function drawLoop() {
+          requestAnimFrame(drawLoop);
+          overlayCC.clearRect(0, 0, 400, 300);
+          //psrElement.innerHTML = "score :" + ctrack.getScore().toFixed(4);
+          if (ctracker.getCurrentPosition()) {
+            ctracker.draw(overlay);
+          }
+        }
+
+        //drawLoop();
+
+        function get_mouth(positions) {
+          left_lip = positions[44];
+          right_lip = positions[50];
+          top_lip = positions[60];
+          bottom_lip = positions[57];
+
+          return [left_lip, right_lip, top_lip, bottom_lip];
+        }
+
+        var chew = false;
+
+        // update stats on every iteration
+        document.addEventListener('clmtrackrIteration', function(event) {
+          stats.update();
+          var positions = ctracker.getCurrentPosition();
+
+          var pos = get_mouth(positions);
+
+          var tot = positions[7][1] - positions[33][1];
+          var dy = pos[3][1] - pos[2][1];
+          var cx = (pos[1][0] - pos[0][0]) / 2;
+          var cy = (pos[3][1] - pos[2][1]) / 2;
+          var ratio = cy / tot;
+
+          if (ratio < 0.01 && chew) {
+            // TODO debounce chew
+            var word = words.shift();
+            if (word) {
+                text.value = word;
+              } else {
+                two.remove(text);
+              }
+
+            text.visible = false;
+            chew = false;
+          } else if (ratio > 0.03 && !chew) {
+            text.visible = true;
+            chew = true;
+          } else if (ratio > 0.07 && !chew) {
+            text.visible = true;
+            chew = true;
+          }
+
+          //console.log(tot, ratio, chew);
+          text.translation.x = cx + pos[0][0];
+          text.translation.y = cy + pos[2][1];
+          text.size = dy;
+          two.update();
+        }, false);
+      });
+    </script>
+    <script type="text/javascript" src="faceTracker/clmtrackr.js" defer></script>
+    <script type="text/javascript" src="faceTracker/models/model_spca_10_svm.js" defer></script>
+    <script type="text/javascript" src="two/two.js" defer></script>
+  </body>
+</html>

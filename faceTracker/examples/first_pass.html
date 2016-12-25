@@ -10,7 +10,7 @@
 			body {
 				font-family: 'Lato';
 				background-color: #f0f0f0;
-				margin: 0px auto;
+				/* margin: 0px auto;*/
 				max-width: 1150px;
 			}
 
@@ -34,16 +34,13 @@
 			}
 
 			#container {
-				position : relative;
-				width : 370px;
+				/* position : relative;*/
+				width : 100%;
 				/*margin : 0px auto;*/
 			}
 
 			#content {
-				margin-top : 70px;
-				margin-left : 100px;
-				margin-right : 100px;
-				max-width: 950px;
+
 			}
 
 			#sketch {
@@ -53,7 +50,15 @@
 			#filter {
 				display: none;
 			}
+			#box{
+				width:10px;
+				height:10px;
+				background-color:red;
+				position:absolute;
+  				top: 200px; /*[wherever you want it]*/
+  				left:200px; /*[wherever you want it]*/
 
+			}
 			h2 {
 				font-weight : 400;
 			}
@@ -77,16 +82,6 @@
 		</style>
 		<script type="text/javascript">
 
-			var _gaq = _gaq || [];
-			_gaq.push(['_setAccount', 'UA-32642923-1']);
-			_gaq.push(['_trackPageview']);
-
-			(function() {
-				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-			})();
-
 		</script>
 	</head>
 	<body>
@@ -105,30 +100,25 @@
 		<script src="../js/svmfilter_fft.js"></script>
 		<script src="../js/mossefilter.js"></script>
 		<script src="./ext_js/Stats.js"></script>
+    <script src="../two/two.min.js"></script>
 		<div id="content">
-			<h2>Facetracking example</h2>
+
+
 			<div id="container">
-				<video id="videoel" width="400" height="300" preload="auto" loop>
+
+				<video id="videoel" width="1200" height="900" preload="auto" loop>
 					<!--<video id="videoel" width="320" height="240" preload="auto">-->
 					<!--<source src="./media/franck.ogv" type="video/ogg"/>-->
 				</video>
-				<canvas id="overlay" width="400" height="300"></canvas>
+        <div id="overlayText" width="1200" height="900" style="position:absolute; top:0; left: 0"></div>
+				<canvas id="overlay" width="1200" height="900"></canvas>
 				<!--<canvas id="sketch" width="400" height="300"></canvas>-->
+				<div id="box"></div>
 			</div>
+
 			<br/>
-			<input class="btn" type="button" value="wait, loading video" disabled="disabled" onclick="startVideo()" id="startbutton"></input>
-			<div id="text">
-				<p>This is an example of face tracking using the javascript library <a href="https://github.com/auduno/clmtrackr"><em>clmtrackr</em></a>. The fitting method is generally called "Non-rigid/deformable face tracking/alignment using constrained local models".</p>
-				<p>Note that this example works best in Google Chrome, with a computer that supports WebGL and floating point textures. It should however work in any modern browser.</p>
-				<div id="gum" class="gum">
-					<p>To try it out:
-						<ol>
-							<li>allow the page to use your webcamera</li>
-							<li>make sure that your face is clearly visible in the video, and click start</li>
-							<li>see the model fitted to your face</li>
-						<ol>
-					</p>
-				</div>
+
+
 				<div id="nogum" class="nogum">
 					<p>
 						There was some problem trying to capture your webcamera, please check that your browser supports WebRTC. Using a fallback video instead. To try it out:
@@ -138,25 +128,58 @@
 						</ol>
 					</p>
 				</div>
+
 			</div>
-			<a href="https://github.com/auduno/clmtrackr"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub"></a>
+
+
 			<script>
 				var vid = document.getElementById('videoel');
 				var overlay = document.getElementById('overlay');
 				var overlayCC = overlay.getContext('2d');
+				var bx = document.getElementById('box');
+
+        // two.js
+        var elem = document.getElementById('overlayText');
+        var params = { width: 1200, height: 900 };
+        var two = new Two(params).appendTo(elem);
+
+        // text style
+        var styles = {
+          family: 'proxima-nova, sans-serif',
+          size: 100,
+          leading: 50,
+          weight: 900,
+          fill: 'red'
+        };
+
+				var mouthIsClosed = false;
+				var indexOfWord = 0;
+				var words = ["chew", "through", "this."];
+				var mouthWord;
+
+
+				//console.log(bx);
 
 				var ctrack = new clm.tracker({useWebGL : true});
 				ctrack.init(pModel);
 
+				/*
 				stats = new Stats();
 				stats.domElement.style.position = 'absolute';
 				stats.domElement.style.top = '0px';
 				document.getElementById('container').appendChild( stats.domElement );
+				*/
+
+				//bx.style.position = "absolute";
+
+
 
 				function enablestart() {
-					var startbutton = document.getElementById('startbutton');
-					startbutton.value = "start";
-					startbutton.disabled = null;
+					//var startbutton = document.getElementById('startbutton');
+					//startbutton.value = "start";
+					//startbutton.disabled = null;
+					startVideo();
+
 				}
 
 				var insertAltVideo = function(video) {
@@ -215,22 +238,127 @@
 					// start tracking
 					ctrack.start(vid);
 					// start loop to draw face
+					//console.log(ctrack);
 					drawLoop();
+
+					mouthWord = document.createElement('a');
+					mouthWord.innerHTML = words[indexOfWord];
+					console.log(words[indexOfWord]);
+					mouthWord.style.position = 'absolute';
+					document.body.appendChild(mouthWord);
 				}
 
 				function drawLoop() {
 					requestAnimFrame(drawLoop);
-					overlayCC.clearRect(0, 0, 400, 300);
+					overlayCC.clearRect(0, 0, 1200, 900);
 					//psrElement.innerHTML = "score :" + ctrack.getScore().toFixed(4);
 					if (ctrack.getCurrentPosition()) {
 						ctrack.draw(overlay);
+
+						var positions = ctrack.getCurrentPosition();
+
+						var ele = document.getElementById('bookingLayer');
+						if (ele){
+						ele.parentNode.removeChild(ele);
+						}
+
+						var topMouthX = positions[60][0].toFixed(2)
+						var topMouthY = positions[60][1].toFixed(2)
+						var bottomMouthX = positions[57][0].toFixed(2)
+						var bottomMouthY = positions[57][1].toFixed(2)
+
+						var d = Math.abs( Math.sqrt( (bottomMouthX-=topMouthX)*bottomMouthX + (bottomMouthY-=topMouthY)*bottomMouthY ));
+						//console.log(d);
+
+
+						var leftX = positions[14][0].toFixed(2)
+						var leftY = positions[14][1].toFixed(2)
+						var rightX = positions[0][0].toFixed(2)
+						var rightY = positions[0][1].toFixed(2)
+
+						var scaleFactor = Math.abs( Math.sqrt( (rightX-=leftX)*rightX + (rightY-=leftY)*rightY ));
+
+						var scaledDist = d/scaleFactor;
+						//console.log(scaledDist);
+
+
+						if ( (scaledDist < 0.05) & !mouthIsClosed) {
+							mouthIsClosed = true;
+
+								if( indexOfWord < words.length -1){
+									indexOfWord ++;
+								}
+								else {
+									indexOfWord = 0;
+								}
+
+							mouthWord.innerHTML = words[indexOfWord];
+              two.remove(text);
+              console.log(leftX);
+              console.log(leftY);
+              var text = two.makeText(words[indexOfWord], leftX, leftY, styles);
+              two.update();
+						}
+
+						if ( (scaledDist > 0.05) & mouthIsClosed){
+							mouthIsClosed = false;
+						}
+
+
+
+						//mouthWord.style.top = (topMouthY + (topMouthY - bottomMouthY)/2);
+
+						//mouthWord.style.left = 1200 - (bottomMouthX + (bottomMouthX - topMouthX)/2);
+
+
+						mouthWord.style.top = (topMouthY + (topMouthY - bottomMouthY)/2);
+						mouthWord.style.left = 1200 - (bottomMouthX + (bottomMouthX - topMouthX)/2);
+
+						mouthWord.style.width = '10px';
+                        mouthWord.style.height = '10px';
+
+						mouthWord.style.color = '#0000ff';
+
+
+						for(var i= 0; i < positions.length; i++ ){
+
+							var myLayer = document.getElementById(i);
+							if(!myLayer){
+								myLayer = document.createElement('a');
+								myLayer.id = i;
+							}
+                            myLayer.style.position = 'absolute';
+                            myLayer.style.left = 1200 - positions[i][0].toFixed(2)+'px';
+                            myLayer.style.top = positions[i][1].toFixed(2)+'px';
+                            myLayer.style.width = '10px';
+                            myLayer.style.height = '10px';
+                            myLayer.style.color = '#00ff00';
+                            myLayer.innerHTML = i;
+                            document.body.appendChild(myLayer);
+						}
+
+						//console.log(positions.length);
+						bx.style.left = 1200 - positions[70][0].toFixed(2)+'px';
+						bx.style.top = positions[70][1].toFixed(2)+'px';
+
+						/*
+						var bx = document.getElementById('box');
+						bx.style.position = "absolute";
+						bx.left = positions[0][0].toFixed(2)+'px';
+						bx.right = positions[0][0].toFixed(2)+'px';
+						*/
+
+
 					}
+
 				}
 
 				// update stats on every iteration
+				/*
 				document.addEventListener('clmtrackrIteration', function(event) {
 					stats.update();
 				}, false);
+				*/
 
 			</script>
 		</div>
